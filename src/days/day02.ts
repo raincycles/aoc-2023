@@ -54,3 +54,25 @@ export function part1(input: string): number {
 
   return sum;
 }
+
+export function part2(input: string): number {
+  const lines = input.split("\n");
+  let sum = 0;
+
+  for (const ln of lines) {
+    const colonIndex = ln.indexOf(":");
+    const body = ln.substring(colonIndex + 2);
+
+    const hands = getHands(body);
+    const maxHand: Hand = [0, 0, 0];
+    for (const hand of hands) {
+      for (let i = 0; i < maxHand.length; i++) {
+        maxHand[i] = Math.max(maxHand[i], hand[i]);
+      }
+    }
+
+    sum += maxHand.reduce((acc, x) => acc * x, 1);
+  }
+
+  return sum;
+}
