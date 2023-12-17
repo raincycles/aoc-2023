@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "target": "es2022",
+    "module": "node16",
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "include": ["src"]
+}
