@@ -16,5 +16,5 @@ try {
   process.exit(1);
 }
 
-const solution = day.part1(input);
+const solution = day.part2(input);
 console.log(solution);
