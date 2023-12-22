@@ -45,6 +45,29 @@ export function part1(input: string): number {
 
 type Range = [from: number, to: number];
 
+function defragment(ranges: Range[]): Range[] {
+  ranges.sort((a, b) => a[0] - b[0]);
+
+  const newRanges: Range[] = [];
+  let currentRange = ranges[0];
+
+  for (let i = 1; i < ranges.length; i++) {
+    const nextRange = ranges[i];
+
+    if (currentRange[1] >= nextRange[0]) {
+      currentRange[1] = Math.max(currentRange[1], nextRange[1]);
+      continue;
+    }
+
+    newRanges.push(currentRange);
+    currentRange = nextRange;
+  }
+
+  newRanges.push(currentRange);
+
+  return newRanges;
+}
+
 export function part2(input: string): number {
   const lines = input.split("\n");
   const sections: Mapping[][] = [];
@@ -107,8 +130,8 @@ export function part2(input: string): number {
       }
     }
 
-    ranges = newRanges;
+    ranges = defragment(newRanges);
   }
 
-  return ranges.reduce((acc, x) => Math.min(acc, x[0]), Infinity);
+  return ranges[0][0];
 }
