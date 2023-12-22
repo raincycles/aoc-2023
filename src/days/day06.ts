@@ -55,10 +55,21 @@ export function part2(input: string): number {
   for (const ln of lines) {
     let rawValue = "";
 
-    for (const ch of ln) {
-      if (isDigit(ch)) {
-        rawValue += ch;
+    let current = 10;
+    while (current < ln.length) {
+      if (!isDigit(ln[current])) {
+        current++;
+        continue;
       }
+
+      const start = current;
+      let end = current + 1;
+      while (end < ln.length && isDigit(ln[end])) {
+        end++;
+      }
+
+      rawValue += ln.substring(start, end);
+      current = end;
     }
 
     const value = Number.parseInt(rawValue, 10);
