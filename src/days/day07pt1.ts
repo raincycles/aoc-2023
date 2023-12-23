@@ -89,7 +89,7 @@ class Play {
   }
 }
 
-export function part1(input: string): number {
+export function solve(input: string): number {
   const lines = input.split("\n");
 
   const plays: Play[] = [];

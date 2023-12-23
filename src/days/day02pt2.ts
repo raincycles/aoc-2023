@@ -32,30 +32,7 @@ function getHands(source: string): Hand[] {
   return hands;
 }
 
-function isHandPossible(hand: Hand): boolean {
-  const [red, green, blue] = hand;
-  return red <= 12 && green <= 13 && blue <= 14;
-}
-
-export function part1(input: string): number {
-  const lines = input.split("\n");
-  let sum = 0;
-
-  for (const ln of lines) {
-    const colonIndex = ln.indexOf(":");
-    const id = Number.parseInt(ln.substring(5, colonIndex), 10);
-    const body = ln.substring(colonIndex + 2);
-
-    const hands = getHands(body);
-    if (hands.every(isHandPossible)) {
-      sum += id;
-    }
-  }
-
-  return sum;
-}
-
-export function part2(input: string): number {
+export function solve(input: string): number {
   const lines = input.split("\n");
   let sum = 0;
 

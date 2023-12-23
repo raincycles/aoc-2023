@@ -1,5 +1,5 @@
 import * as fs from "node:fs";
-import * as day from "./days/day07";
+import * as day from "./days/day07pt1";
 
 if (process.argv.length < 3) {
   console.error("Please provide a path to the input file.");
@@ -16,5 +16,5 @@ try {
   process.exit(1);
 }
 
-const solution = day.part1(input);
+const solution = day.solve(input);
 console.log(solution);
