@@ -1,5 +1,5 @@
 import * as fs from "node:fs";
-import * as day from "./days/day09pt2";
+import * as day from "./days/day10pt1";
 
 if (process.argv.length < 3) {
   console.error("Please provide a path to the input file.");
