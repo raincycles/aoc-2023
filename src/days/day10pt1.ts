@@ -1,13 +1,15 @@
 // prettier-ignore
 const Tile = {
-  Start:      "S",
-  Vertical:   "|",
-  Horizontal: "-",
-  NorthEast:  "L",
-  NorthWest:  "J",
-  SouthEast:  "F",
-  SouthWest:  "7",
+  Ground:     0,
+  Vertical:   1,
+  Horizontal: 2,
+  NorthEast:  3,
+  NorthWest:  4,
+  SouthWest:  5,
+  SouthEast:  6,
 } as const;
+
+type Tile = (typeof Tile)[keyof typeof Tile];
 
 // prettier-ignore
 const Direction = {
@@ -19,41 +21,53 @@ const Direction = {
 
 type Direction = (typeof Direction)[keyof typeof Direction];
 
-function getTileAt(lines: string[], x: number, y: number): string | undefined {
-  const width = lines[0].length;
-  const height = lines.length;
-
-  if (x >= 0 && x < width && y >= 0 && y < height) {
-    return lines[y][x];
-  }
-
-  return undefined;
-}
-
-class Vec2D {
+class Vec2 {
   constructor(
     public x: number,
     public y: number,
   ) {}
-}
 
-function findStart(lines: string[]): Vec2D {
-  const width = lines[0].length;
-  const height = lines.length;
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (lines[y][x] === Tile.Start) {
-        return new Vec2D(x, y);
-      }
-    }
+  public clone(): Vec2 {
+    return new Vec2(this.x, this.y);
   }
 
-  throw new Error("Unreachable");
+  public isEqual(vec: Vec2): boolean {
+    return this.x === vec.x && this.y === vec.y;
+  }
 }
 
-function followPipe(dir: Direction, pipe: string): Direction {
-  switch (pipe) {
+function getTileAt(grid: Tile[][], x: number, y: number): Tile | null {
+  const height = grid.length;
+  const width = grid[0].length;
+
+  if (x >= 0 && x < width && y >= 0 && y < height) {
+    return grid[y][x];
+  }
+
+  return null;
+}
+
+function isDirectionOpen(tile: Tile, dir: Direction): boolean {
+  switch (tile) {
+    case Tile.Vertical:
+      return dir === Direction.North || dir === Direction.South;
+    case Tile.Horizontal:
+      return dir === Direction.East || dir === Direction.West;
+    case Tile.NorthEast:
+      return dir === Direction.North || dir === Direction.East;
+    case Tile.NorthWest:
+      return dir === Direction.North || dir === Direction.West;
+    case Tile.SouthWest:
+      return dir === Direction.South || dir === Direction.West;
+    case Tile.SouthEast:
+      return dir === Direction.South || dir === Direction.East;
+    default:
+      return false;
+  }
+}
+
+function followTile(tile: Tile, dir: Direction): Direction {
+  switch (tile) {
     case Tile.Vertical:
       if (dir === Direction.North) {
         return Direction.North;
@@ -96,71 +110,138 @@ function followPipe(dir: Direction, pipe: string): Direction {
         return Direction.South;
       }
       break;
-    default:
-      throw new Error("Unreachable");
   }
 
-  throw new Error("Unreachable");
+  throw new Error("Invalid tile and direction combination");
 }
 
 export function solve(input: string): number {
   const lines = input.split("\n");
 
-  let current = findStart(lines);
-  let dir: Direction;
-  let steps = 1;
+  const grid = Array.from(new Array(lines.length), () =>
+    new Array(lines[0].length).fill(Tile.Ground),
+  ) as Tile[][];
 
-  const north = getTileAt(lines, current.x, current.y - 1);
-  const east = getTileAt(lines, current.x + 1, current.y);
-  const south = getTileAt(lines, current.x, current.y + 1);
-  const west = getTileAt(lines, current.x - 1, current.y);
+  const gridHeight = lines.length;
+  const gridWidth = lines[0].length;
 
-  const validNorth: string[] = [Tile.Vertical, Tile.SouthEast, Tile.SouthWest];
-  const validEast: string[] = [Tile.Horizontal, Tile.NorthWest, Tile.SouthWest];
-  const validSouth: string[] = [Tile.Vertical, Tile.NorthEast, Tile.NorthWest];
-  const validWest: string[] = [Tile.Horizontal, Tile.NorthEast, Tile.SouthEast];
+  let startPos = new Vec2(0, 0);
 
-  if (north !== undefined && validNorth.includes(north)) {
-    dir = Direction.North;
-    current.y--;
-  } else if (east !== undefined && validEast.includes(east)) {
-    dir = Direction.East;
-    current.x++;
-  } else if (south !== undefined && validSouth.includes(south)) {
-    dir = Direction.South;
-    current.y++;
-  } else if (west !== undefined && validWest.includes(west)) {
-    dir = Direction.West;
-    current.x--;
-  } else {
-    throw new Error("Unreachable");
+  for (let y = 0; y < gridHeight; y++) {
+    for (let x = 0; x < gridWidth; x++) {
+      const ch = lines[y][x];
+
+      let tile: Tile;
+      switch (ch) {
+        case "|":
+          tile = Tile.Vertical;
+          break;
+        case "-":
+          tile = Tile.Horizontal;
+          break;
+        case "L":
+          tile = Tile.NorthEast;
+          break;
+        case "J":
+          tile = Tile.NorthWest;
+          break;
+        case "7":
+          tile = Tile.SouthWest;
+          break;
+        case "F":
+          tile = Tile.SouthEast;
+          break;
+        case ".":
+          tile = Tile.Ground;
+          break;
+        case "S":
+          tile = Tile.Ground;
+          startPos.x = x;
+          startPos.y = y;
+          break;
+        default:
+          throw new Error("Unknown tile");
+      }
+
+      grid[y][x] = tile;
+    }
   }
 
-  while (true) {
-    const tile = lines[current.y][current.x];
+  const northTile = getTileAt(grid, startPos.x, startPos.y - 1);
+  const eastTile = getTileAt(grid, startPos.x + 1, startPos.y);
+  const southTile = getTileAt(grid, startPos.x, startPos.y + 1);
+  const westTile = getTileAt(grid, startPos.x - 1, startPos.y);
 
-    if (tile === "S") {
-      break;
-    }
+  const northOpen =
+    northTile !== null && isDirectionOpen(northTile, Direction.South);
+  const eastOpen =
+    eastTile !== null && isDirectionOpen(eastTile, Direction.West);
+  const southOpen =
+    southTile !== null && isDirectionOpen(southTile, Direction.North);
+  const westOpen =
+    westTile !== null && isDirectionOpen(westTile, Direction.East);
 
-    dir = followPipe(dir, tile);
+  let startTile: Tile;
+  if (northOpen && southOpen) {
+    startTile = Tile.Vertical;
+  } else if (northOpen && westOpen) {
+    startTile = Tile.NorthWest;
+  } else if (northOpen && eastOpen) {
+    startTile = Tile.NorthEast;
+  } else if (westOpen && eastOpen) {
+    startTile = Tile.Horizontal;
+  } else if (southOpen && westOpen) {
+    startTile = Tile.SouthWest;
+  } else if (southOpen && eastOpen) {
+    startTile = Tile.SouthEast;
+  } else {
+    throw new Error("Invalid number of open directions");
+  }
 
-    switch (dir) {
+  grid[startPos.y][startPos.x] = startTile;
+
+  let curPos = startPos.clone();
+
+  let curDir: Direction;
+  if (northOpen) {
+    curDir = Direction.North;
+    curPos.y--;
+  } else if (eastOpen) {
+    curDir = Direction.East;
+    curPos.x++;
+  } else if (southOpen) {
+    curDir = Direction.South;
+    curPos.y++;
+  } else if (westOpen) {
+    curDir = Direction.West;
+    curPos.x--;
+  } else {
+    throw new Error("No open directions");
+  }
+
+  let steps = 1;
+  while (!curPos.isEqual(startPos)) {
+    steps++;
+
+    const tile = grid[curPos.y][curPos.x];
+    const newDir = followTile(tile, curDir);
+
+    switch (newDir) {
       case Direction.North:
-        current.y--;
+        curPos.y--;
         break;
       case Direction.East:
-        current.x++;
+        curPos.x++;
         break;
       case Direction.South:
-        current.y++;
+        curPos.y++;
         break;
       case Direction.West:
-        current.x--;
+        curPos.x--;
         break;
     }
 
-    steps++;
+    curDir = newDir;
   }
 
   return steps / 2;
